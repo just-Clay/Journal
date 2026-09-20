@@ -24,5 +24,22 @@ from gi.repository import Gtk
 class JournalWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'JournalWindow'
 
+#Stack view buttons
+    stack = Gtk.Template.Child()
+    calendar_button = Gtk.Template.Child()
+    timeline_button = Gtk.Template.Child()
+    on_this_day_button = Gtk.Template.Child()
+    search_button = Gtk.Template.Child()
+
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self.calendar_button.connect(
+        "clicked", lambda _: self.stack.set_visible_child_name("calendar"))
+        self.timeline_button.connect(
+        "clicked", lambda _: self.stack.set_visible_child_name("timeline"))
+        self.on_this_day_button.connect(
+        "clicked", lambda _: self.stack.set_visible_child_name("on_this_day"))
+        self.search_button.connect(
+        "clicked", lambda _: self.stack.set_visible_child_name("editor"))

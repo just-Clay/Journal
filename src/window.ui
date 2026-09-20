@@ -11,7 +11,8 @@
     <property name="default-width">800</property>
     <property name="title" translatable="yes">Journal</property>
     <child>
-      <object class="AdwNavigationSplitView">
+      <object class="AdwOverlaySplitView" id="split_view">
+        <!-- Main Content Area -->
         <property name="content">
           <object class="AdwNavigationPage">
             <property name="title" translatable="yes">Journal</property>
@@ -19,25 +20,7 @@
               <object class="GtkBox">
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="AdwHeaderBar">
-                    <property name="css-classes">flat</property>
-                    <property name="show-back-button">False</property>
-                    <property name="show-start-title-buttons">False</property>
-                    <property name="title-widget">
-                      <object class="GtkLabel">
-                        <property name="label">*Curent View*</property>
-                      </object>
-                    </property>
-                    <property name="valign">start</property>
-                    <child>
-                      <object class="GtkButton">
-                        <property name="icon-name">sidebar-show-symbolic</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkStack">
+                  <object class="GtkStack" id="stack">
                     <property name="hexpand">True</property>
                     <property name="vexpand">True</property>
                     <child>
@@ -45,39 +28,48 @@
                         <property name="child">
                           <object class="GtkBox">
                             <property name="hexpand">True</property>
-                            <property name="margin-bottom">12</property>
-                            <property name="margin-end">12</property>
-                            <property name="margin-start">12</property>
                             <property name="orientation">vertical</property>
                             <property name="vexpand">True</property>
                             <child>
-                              <object class="GtkBox">
-                                <property name="halign">center</property>
-                                <property name="spacing">12</property>
-                                <child>
-                                  <object class="GtkButton" id="prev_month">
-                                    <property name="halign">start</property>
-                                    <property name="icon-name">go-previous</property>
+                              <object class="AdwHeaderBar">
+                                <property name="css-classes">flat</property>
+                                <property name="show-back-button">False</property>
+                                <property name="show-start-title-buttons">False</property>
+                                <child type="start">
+                                  <object class="GtkToggleButton">
+                                    <property name="active" bind-source="split_view" bind-property="show-sidebar" bind-flags="sync-create|bidirectional"/>
+                                    <property name="icon-name">sidebar-show-symbolic</property>
+                                    <property name="tooltip-text" translatable="yes">Toggle Sidebar</property>
                                   </object>
                                 </child>
-                                <child>
-                                  <object class="GtkLabel" id="month_year">
-                                    <property name="justify">center</property>
-                                    <property name="label">*Month Year*</property>
-                                  </object>
-                                </child>
-                                <child>
-                                  <object class="GtkButton" id="next_month">
-                                    <property name="icon-name">go-next</property>
+                                <child type="title">
+                                  <object class="GtkBox">
+                                    <property name="css-classes">linked</property>
+                                    <child type="start">
+                                      <object class="GtkButton" id="prev_month">
+                                        <property name="halign">start</property>
+                                        <property name="icon-name">go-previous</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton">
+                                        <property name="label">*Month Year*</property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkButton" id="next_month">
+                                        <property name="icon-name">go-next</property>
+                                      </object>
+                                    </child>
                                   </object>
                                 </child>
                               </object>
                             </child>
                             <child>
                               <object class="GtkBox">
-                                <property name="halign">center</property>
+                                <property name="margin-end">12</property>
+                                <property name="margin-start">12</property>
                                 <property name="margin-top">6</property>
-                                <property name="spacing">25</property>
                                 <child>
                                   <object class="GtkLabel">
                                     <property name="halign">center</property>
@@ -134,6 +126,10 @@
                                 <property name="column-homogeneous">True</property>
                                 <property name="column-spacing">6</property>
                                 <property name="hexpand">True</property>
+                                <property name="margin-bottom">12</property>
+                                <property name="margin-end">12</property>
+                                <property name="margin-start">12</property>
+                                <property name="margin-top">10</property>
                                 <property name="row-homogeneous">True</property>
                                 <property name="row-spacing">6</property>
                                 <property name="vexpand">True</property>
@@ -148,23 +144,34 @@
                     <child>
                       <object class="GtkStackPage" id="timeline_view">
                         <property name="child">
-                          <object class="GtkScrolledWindow" id="timeline_scrolled_window">
-                            <property name="child">
-                              <object class="GtkListBox" id="timeline_list">
-                                <property name="hexpand">True</property>
-                                <property name="margin-bottom">12</property>
-                                <property name="margin-end">16</property>
-                                <property name="margin-start">16</property>
-                                <property name="margin-top">12</property>
-                                <style>
-                                  <class name="boxed-list"/>
-                                </style>
+                          <object class="GtkBox">
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="AdwHeaderBar">
+                                <property name="show-back-button">False</property>
+                                <property name="show-start-title-buttons">False</property>
+                                <property name="title-widget">
+                                  <object class="AdwWindowTitle">
+                                    <property name="title">Timeline</property>
+                                  </object>
+                                </property>
+                                <child type="start">
+                                  <object class="GtkToggleButton">
+                                    <property name="active" bind-source="split_view" bind-property="show-sidebar" bind-flags="sync-create|bidirectional"/>
+                                    <property name="icon-name">sidebar-show-symbolic</property>
+                                    <property name="tooltip-text" translatable="yes">Toggle Sidebar</property>
+                                  </object>
+                                </child>
                               </object>
-                            </property>
-                            <property name="hexpand">True</property>
-                            <property name="hscrollbar-policy">never</property>
-                            <property name="vexpand">True</property>
-                            <property name="vscrollbar-policy">automatic</property>
+                            </child>
+                            <child>
+                              <object class="GtkScrolledWindow">
+                                <property name="vexpand">True</property>
+                                <child>
+                                  <object class="GtkListBox"/>
+                                </child>
+                              </object>
+                            </child>
                           </object>
                         </property>
                         <property name="name">timeline</property>
@@ -177,34 +184,31 @@
                           <object class="GtkBox">
                             <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkSearchEntry" id="search_entry">
-                                <property name="margin-end">16</property>
-                                <property name="margin-start">16</property>
-                                <property name="placeholder-text">What are you looking for?</property>
+                              <object class="AdwHeaderBar">
+                                <property name="title-widget">
+                                  <object class="GtkSearchEntry"/>
+                                </property>
+                                <child type="start">
+                                  <object class="GtkToggleButton">
+                                    <property name="active" bind-source="split_view" bind-property="show-sidebar" bind-flags="sync-create|bidirectional"/>
+                                    <property name="icon-name">sidebar-show-symbolic</property>
+                                    <property name="tooltip-text" translatable="yes">Toggle Sidebar</property>
+                                  </object>
+                                </child>
                               </object>
                             </child>
                             <child>
-                              <object class="GtkScrolledWindow" id="search_scrolled_window_2">
-                                <property name="child">
-                                  <object class="GtkListBox" id="search_list">
-                                    <property name="hexpand">True</property>
-                                    <property name="margin-bottom">12</property>
-                                    <property name="margin-end">16</property>
-                                    <property name="margin-start">16</property>
-                                    <property name="margin-top">12</property>
-                                    <style>
-                                      <class name="boxed-list"/>
-                                    </style>
-                                  </object>
-                                </property>
-                                <property name="hexpand">True</property>
-                                <property name="hscrollbar-policy">never</property>
+                              <object class="GtkScrolledWindow">
                                 <property name="vexpand">True</property>
-                                <property name="vscrollbar-policy">automatic</property>
+                                <child>
+                                  <object class="GtkListBox"/>
+                                </child>
                               </object>
                             </child>
                           </object>
                         </property>
+                        <property name="name">search</property>
+                        <property name="title">Search</property>
                       </object>
                     </child>
                     <child>
@@ -213,28 +217,28 @@
                           <object class="GtkBox">
                             <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkLabel" id="today_date">
-                                <property name="label">today</property>
+                              <object class="AdwHeaderBar">
+                                <property name="title-widget">
+                                  <object class="AdwWindowTitle">
+                                    <property name="title">*date*</property>
+                                  </object>
+                                </property>
+                                <child type="start">
+                                  <object class="GtkToggleButton">
+                                    <property name="active" bind-source="split_view" bind-property="show-sidebar" bind-flags="sync-create|bidirectional"/>
+                                    <property name="icon-name">sidebar-show-symbolic</property>
+                                    <property name="tooltip-text" translatable="yes">Toggle Sidebar</property>
+                                  </object>
+                                </child>
                               </object>
                             </child>
                             <child>
-                              <object class="GtkScrolledWindow" id="search_scrolled_window_3">
-                                <property name="child">
-                                  <object class="GtkListBox" id="on_this_day_list">
-                                    <property name="hexpand">True</property>
-                                    <property name="margin-bottom">12</property>
-                                    <property name="margin-end">16</property>
-                                    <property name="margin-start">16</property>
-                                    <property name="margin-top">12</property>
-                                    <style>
-                                      <class name="boxed-list"/>
-                                    </style>
-                                  </object>
-                                </property>
+                              <object class="GtkScrolledWindow">
                                 <property name="hexpand">True</property>
-                                <property name="hscrollbar-policy">never</property>
                                 <property name="vexpand">True</property>
-                                <property name="vscrollbar-policy">automatic</property>
+                                <child>
+                                  <object class="GtkListBox"/>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -243,21 +247,181 @@
                         <property name="title">On This Day</property>
                       </object>
                     </child>
+                    <child>
+                      <object class="GtkStackPage" id="editor_view">
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="AdwHeaderBar">
+                                <property name="css-classes">flat</property>
+                                <property name="show-back-button">False</property>
+                                <property name="show-start-title-buttons">False</property>
+                                <property name="title-widget">
+                                  <object class="AdwWindowTitle">
+                                    <property name="title">*date*</property>
+                                  </object>
+                                </property>
+                                <child type="start">
+                                  <object class="GtkToggleButton">
+                                    <property name="active" bind-source="split_view" bind-property="show-sidebar" bind-flags="sync-create|bidirectional"/>
+                                    <property name="icon-name">sidebar-show-symbolic</property>
+                                    <property name="tooltip-text" translatable="yes">Toggle Sidebar</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="AdwOverlaySplitView" id="attachment_view">
+                                <property name="content">
+                                  <object class="GtkBox">
+                                    <property name="orientation">vertical</property>
+                                    <child>
+                                      <object class="AdwClamp">
+                                        <child>
+                                          <object class="AdwHeaderBar">
+                                            <property name="css-classes">flat</property>
+                                            <property name="margin-end">6</property>
+                                            <property name="margin-start">6</property>
+                                            <property name="show-back-button">False</property>
+                                            <property name="show-end-title-buttons">False</property>
+                                            <property name="show-start-title-buttons">False</property>
+                                            <property name="show-title">False</property>
+                                            <child>
+                                              <object class="GtkDropDown">
+                                                <property name="model">
+                                                  <object class="GtkStringList">
+                                                    <items>
+                                                      <item>Plain Text</item>
+                                                      <item>Heading 1</item>
+                                                      <item>Heading 2</item>
+                                                      <item>Heading 3</item>
+                                                      <item>Heading 4</item>
+                                                      <item>Heading 5</item>
+                                                      <item>Heading 6</item>
+                                                    </items>
+                                                  </object>
+                                                </property>
+                                              </object>
+                                            </child>
+                                            <child>
+                                              <object class="GtkToggleButton" id="bold_toggle">
+                                                <property name="icon-name">format-text-bold</property>
+                                              </object>
+                                            </child>
+                                            <child>
+                                              <object class="GtkToggleButton" id="italics_toggle">
+                                                <property name="icon-name">format-text-italic</property>
+                                              </object>
+                                            </child>
+                                            <child type="end">
+                                              <object class="GtkToggleButton">
+                                                <property name="active" bind-source="attachment_view" bind-property="show-sidebar" bind-flags="bidirectional | sync-create">True</property>
+                                                <property name="icon-name">sidebar-show-right-symbolic</property>
+                                                <property name="tooltip-text" translatable="yes">Toggle Sidebar</property>
+                                              </object>
+                                            </child>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkScrolledWindow">
+                                        <property name="vexpand">True</property>
+                                        <child>
+                                          <object class="AdwClamp">
+                                            <property name="vexpand">True</property>
+                                            <child>
+                                              <object class="GtkTextView">
+                                                <property name="accepts-tab">False</property>
+                                                <property name="bottom-margin">12</property>
+                                                <property name="css-classes">card</property>
+                                                <property name="left-margin">12</property>
+                                                <property name="right-margin">12</property>
+                                                <property name="top-margin">12</property>
+                                                <property name="margin-bottom">12</property>
+                                                <property name="margin-end">12</property>
+                                                <property name="margin-start">12</property>
+                                                <property name="vexpand">True</property>
+                                                <property name="wrap-mode">word-char</property>
+                                              </object>
+                                            </child>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </property>
+                                <property name="sidebar">
+                                  <object class="GtkBox">
+                                    <property name="css-classes">background</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="orientation">vertical</property>
+                                    <property name="spacing">6</property>
+                                    <property name="vexpand">True</property>
+                                    <property name="visible">true</property>
+                                    <child>
+                                      <object class="GtkBox">
+                                        <property name="css-classes">card</property>
+                                        <property name="margin-bottom">12</property>
+                                        <property name="margin-end">12</property>
+                                        <property name="margin-top">6</property>
+                                        <property name="orientation">vertical</property>
+                                        <child>
+                                          <object class="AdwHeaderBar">
+                                            <property name="css-classes">flat</property>
+                                            <property name="show-back-button">False</property>
+                                            <property name="show-end-title-buttons">False</property>
+                                            <property name="show-start-title-buttons">False</property>
+                                            <property name="show-title">False</property>
+                                            <child type="start">
+                                              <object class="GtkLabel">
+                                                <property name="label">Attachments</property>
+                                                <property name="margin-start">12</property>
+                                              </object>
+                                            </child>
+                                            <child type="end">
+                                              <object class="GtkButton" id="add_attachment">
+                                                <property name="icon-name">document-new</property>
+                                                <property name="margin-end">12</property>
+                                              </object>
+                                            </child>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="AdwCarousel">
+                                            <property name="vexpand">True</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </property>
+                                <property name="sidebar-position">end</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                        <property name="name">editor</property>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>
             </child>
           </object>
         </property>
-        <property name="max-sidebar-width">150.0</property>
-        <property name="min-sidebar-width">135.0</property>
-        <property name="show-content">True</property>
+        <property name="max-sidebar-width">220.0</property>
+        <property name="min-sidebar-width">150.0</property>
+        <property name="show-sidebar">true</property>
+        <!-- Sidebar Area -->
         <property name="sidebar">
           <object class="AdwNavigationPage">
-            <property name="child">
+            <property name="title">Journal</property>
+            <child>
               <object class="GtkBox">
                 <property name="orientation">vertical</property>
-                <property name="valign">start</property>
+                <property name="valign">fill</property>
                 <child>
                   <object class="AdwHeaderBar">
                     <property name="css-classes">flat</property>
@@ -291,18 +455,23 @@
                         </child>
                         <child>
                           <object class="GtkLabel">
+                            <property name="hexpand">true</property>
                             <property name="label">Calendar</property>
+                            <property name="xalign">0</property>
                           </object>
                         </child>
                       </object>
                     </property>
-                    <property name="halign">start</property>
+                    <property name="halign">fill</property>
                     <property name="has-frame">False</property>
-                    <property name="margin-start">3</property>
+                    <property name="margin-bottom">2</property>
+                    <property name="margin-end">6</property>
+                    <property name="margin-start">6</property>
+                    <property name="margin-top">2</property>
                   </object>
                 </child>
                 <child>
-                  <object class="GtkButton">
+                  <object class="GtkButton" id="timeline_button">
                     <property name="child">
                       <object class="GtkBox">
                         <property name="spacing">6</property>
@@ -312,22 +481,27 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="timeline_button">
+                          <object class="GtkLabel">
+                            <property name="hexpand">true</property>
                             <property name="label">Timeline</property>
+                            <property name="xalign">0</property>
                           </object>
                         </child>
                       </object>
                     </property>
-                    <property name="halign">start</property>
+                    <property name="halign">fill</property>
                     <property name="has-frame">False</property>
-                    <property name="margin-start">3</property>
+                    <property name="margin-bottom">2</property>
+                    <property name="margin-end">6</property>
+                    <property name="margin-start">6</property>
+                    <property name="margin-top">2</property>
                   </object>
                 </child>
                 <child>
-                  <object class="GtkButton">
+                  <object class="GtkButton" id="on_this_day_button">
                     <property name="child">
                       <object class="GtkBox">
-                        <property name="halign">center</property>
+                        <property name="halign">fill</property>
                         <property name="spacing">6</property>
                         <child>
                           <object class="GtkImage">
@@ -335,45 +509,54 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="on_this_day_button">
+                          <object class="GtkLabel">
+                            <property name="hexpand">true</property>
                             <property name="label">On This Day</property>
+                            <property name="xalign">0</property>
                           </object>
                         </child>
                       </object>
                     </property>
-                    <property name="halign">start</property>
+                    <property name="halign">fill</property>
                     <property name="has-frame">False</property>
-                    <property name="margin-start">3</property>
+                    <property name="margin-bottom">2</property>
+                    <property name="margin-end">6</property>
+                    <property name="margin-start">6</property>
+                    <property name="margin-top">2</property>
                   </object>
                 </child>
                 <child>
-                  <object class="GtkButton">
+                  <object class="GtkButton" id="search_button">
                     <property name="child">
                       <object class="GtkBox">
                         <property name="spacing">6</property>
                         <child>
-                          <object class="GtkImage" id="search_button">
+                          <object class="GtkImage">
                             <property name="icon-name">system-search</property>
                           </object>
                         </child>
                         <child>
                           <object class="GtkLabel">
+                            <property name="hexpand">true</property>
                             <property name="label">Search</property>
+                            <property name="xalign">0</property>
                           </object>
                         </child>
                       </object>
                     </property>
-                    <property name="halign">start</property>
+                    <property name="halign">fill</property>
                     <property name="has-frame">False</property>
-                    <property name="margin-start">3</property>
+                    <property name="margin-bottom">2</property>
+                    <property name="margin-end">6</property>
+                    <property name="margin-start">6</property>
+                    <property name="margin-top">2</property>
                   </object>
                 </child>
               </object>
-            </property>
-            <property name="title">Journal</property>
+            </child>
           </object>
         </property>
-        <property name="sidebar-width-fraction">-0.0</property>
+        <property name="sidebar-width-fraction">0.25</property>
       </object>
     </child>
   </template>
