@@ -1,0 +1,390 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 1.0.3 -->
+<interface>
+  <!-- interface-name window.ui -->
+  <requires lib="Adw" version="1.0"/>
+  <requires lib="gio" version="2.0"/>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="libadwaita" version="1.7"/>
+  <template class="JournalWindow" parent="AdwApplicationWindow">
+    <property name="default-height">600</property>
+    <property name="default-width">800</property>
+    <property name="title" translatable="yes">Journal</property>
+    <child>
+      <object class="AdwNavigationSplitView">
+        <property name="content">
+          <object class="AdwNavigationPage">
+            <property name="title" translatable="yes">Journal</property>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="AdwHeaderBar">
+                    <property name="css-classes">flat</property>
+                    <property name="show-back-button">False</property>
+                    <property name="show-start-title-buttons">False</property>
+                    <property name="title-widget">
+                      <object class="GtkLabel">
+                        <property name="label">*Curent View*</property>
+                      </object>
+                    </property>
+                    <property name="valign">start</property>
+                    <child>
+                      <object class="GtkButton">
+                        <property name="icon-name">sidebar-show-symbolic</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkStack">
+                    <property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
+                    <child>
+                      <object class="GtkStackPage" id="calendar_view">
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="hexpand">True</property>
+                            <property name="margin-bottom">12</property>
+                            <property name="margin-end">12</property>
+                            <property name="margin-start">12</property>
+                            <property name="orientation">vertical</property>
+                            <property name="vexpand">True</property>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="halign">center</property>
+                                <property name="spacing">12</property>
+                                <child>
+                                  <object class="GtkButton" id="prev_month">
+                                    <property name="halign">start</property>
+                                    <property name="icon-name">go-previous</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="month_year">
+                                    <property name="justify">center</property>
+                                    <property name="label">*Month Year*</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="next_month">
+                                    <property name="icon-name">go-next</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="halign">center</property>
+                                <property name="margin-top">6</property>
+                                <property name="spacing">25</property>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="halign">center</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="label">Monday</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="halign">center</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="label">Tuesday</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="halign">center</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="label">Wednesday</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="halign">center</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="label">Thursday</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="halign">center</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="label">Friday</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="halign">center</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="label">Saturday</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="halign">center</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="label">Sunday</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkGrid" id="calendar_grid">
+                                <property name="column-homogeneous">True</property>
+                                <property name="column-spacing">6</property>
+                                <property name="hexpand">True</property>
+                                <property name="row-homogeneous">True</property>
+                                <property name="row-spacing">6</property>
+                                <property name="vexpand">True</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                        <property name="name">calendar</property>
+                        <property name="title">Calendar</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkStackPage" id="timeline_view">
+                        <property name="child">
+                          <object class="GtkScrolledWindow" id="timeline_scrolled_window">
+                            <property name="child">
+                              <object class="GtkListBox" id="timeline_list">
+                                <property name="hexpand">True</property>
+                                <property name="margin-bottom">12</property>
+                                <property name="margin-end">16</property>
+                                <property name="margin-start">16</property>
+                                <property name="margin-top">12</property>
+                                <style>
+                                  <class name="boxed-list"/>
+                                </style>
+                              </object>
+                            </property>
+                            <property name="hexpand">True</property>
+                            <property name="hscrollbar-policy">never</property>
+                            <property name="vexpand">True</property>
+                            <property name="vscrollbar-policy">automatic</property>
+                          </object>
+                        </property>
+                        <property name="name">timeline</property>
+                        <property name="title">Timeline</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkStackPage" id="search_view">
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkSearchEntry" id="search_entry">
+                                <property name="margin-end">16</property>
+                                <property name="margin-start">16</property>
+                                <property name="placeholder-text">What are you looking for?</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkScrolledWindow" id="search_scrolled_window_2">
+                                <property name="child">
+                                  <object class="GtkListBox" id="search_list">
+                                    <property name="hexpand">True</property>
+                                    <property name="margin-bottom">12</property>
+                                    <property name="margin-end">16</property>
+                                    <property name="margin-start">16</property>
+                                    <property name="margin-top">12</property>
+                                    <style>
+                                      <class name="boxed-list"/>
+                                    </style>
+                                  </object>
+                                </property>
+                                <property name="hexpand">True</property>
+                                <property name="hscrollbar-policy">never</property>
+                                <property name="vexpand">True</property>
+                                <property name="vscrollbar-policy">automatic</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkStackPage" id="on_this_day_view">
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkLabel" id="today_date">
+                                <property name="label">today</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkScrolledWindow" id="search_scrolled_window_3">
+                                <property name="child">
+                                  <object class="GtkListBox" id="on_this_day_list">
+                                    <property name="hexpand">True</property>
+                                    <property name="margin-bottom">12</property>
+                                    <property name="margin-end">16</property>
+                                    <property name="margin-start">16</property>
+                                    <property name="margin-top">12</property>
+                                    <style>
+                                      <class name="boxed-list"/>
+                                    </style>
+                                  </object>
+                                </property>
+                                <property name="hexpand">True</property>
+                                <property name="hscrollbar-policy">never</property>
+                                <property name="vexpand">True</property>
+                                <property name="vscrollbar-policy">automatic</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                        <property name="name">on_this_day</property>
+                        <property name="title">On This Day</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </property>
+        <property name="max-sidebar-width">150.0</property>
+        <property name="min-sidebar-width">135.0</property>
+        <property name="show-content">True</property>
+        <property name="sidebar">
+          <object class="AdwNavigationPage">
+            <property name="child">
+              <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <property name="valign">start</property>
+                <child>
+                  <object class="AdwHeaderBar">
+                    <property name="css-classes">flat</property>
+                    <property name="show-back-button">False</property>
+                    <property name="show-end-title-buttons">False</property>
+                    <property name="show-start-title-buttons">False</property>
+                    <property name="show-title">True</property>
+                    <property name="title-widget">
+                      <object class="AdwWindowTitle">
+                        <property name="title">Journal</property>
+                      </object>
+                    </property>
+                    <child type="end">
+                      <object class="GtkMenuButton">
+                        <property name="halign">center</property>
+                        <property name="icon-name">open-menu-symbolic</property>
+                        <property name="menu-model">primary_menu</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="calendar_button">
+                    <property name="child">
+                      <object class="GtkBox">
+                        <property name="spacing">6</property>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="icon-name">x-office-calendar</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="label">Calendar</property>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                    <property name="halign">start</property>
+                    <property name="has-frame">False</property>
+                    <property name="margin-start">3</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton">
+                    <property name="child">
+                      <object class="GtkBox">
+                        <property name="spacing">6</property>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="icon-name">view-list-bullet-symbolic</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="timeline_button">
+                            <property name="label">Timeline</property>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                    <property name="halign">start</property>
+                    <property name="has-frame">False</property>
+                    <property name="margin-start">3</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton">
+                    <property name="child">
+                      <object class="GtkBox">
+                        <property name="halign">center</property>
+                        <property name="spacing">6</property>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="icon-name">document-open-recent-symbolic</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="on_this_day_button">
+                            <property name="label">On This Day</property>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                    <property name="halign">start</property>
+                    <property name="has-frame">False</property>
+                    <property name="margin-start">3</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton">
+                    <property name="child">
+                      <object class="GtkBox">
+                        <property name="spacing">6</property>
+                        <child>
+                          <object class="GtkImage" id="search_button">
+                            <property name="icon-name">system-search</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="label">Search</property>
+                          </object>
+                        </child>
+                      </object>
+                    </property>
+                    <property name="halign">start</property>
+                    <property name="has-frame">False</property>
+                    <property name="margin-start">3</property>
+                  </object>
+                </child>
+              </object>
+            </property>
+            <property name="title">Journal</property>
+          </object>
+        </property>
+        <property name="sidebar-width-fraction">-0.0</property>
+      </object>
+    </child>
+  </template>
+  <menu id="primary_menu">
+    <item>
+      <attribute name="action">app.preferences</attribute>
+      <attribute name="label">Preferences</attribute>
+    </item>
+    <item>
+      <attribute name="action">app.about</attribute>
+      <attribute name="label">About Journal</attribute>
+    </item>
+  </menu>
+</interface>

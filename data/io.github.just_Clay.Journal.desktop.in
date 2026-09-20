@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Journal
+Exec=journal
+Icon=io.github.just_Clay.Journal
+Terminal=false
+Type=Application
+Categories=Utility;
+Keywords=GTK;
+StartupNotify=true
+DBusActivatable=true

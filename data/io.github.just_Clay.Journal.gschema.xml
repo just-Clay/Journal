@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="journal">
+	<schema id="io.github.just_Clay.Journal" path="/io/github/just_Clay/Journal/">
+	</schema>
+</schemalist>
