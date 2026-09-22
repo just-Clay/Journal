@@ -52,8 +52,50 @@
                                       </object>
                                     </child>
                                     <child>
-                                      <object class="GtkButton">
+                                      <object class="GtkMenuButton" id="month_year">
+                                        <property name="direction">none</property>
                                         <property name="label">*Month Year*</property>
+                                        <property name="popover">
+                                          <object class="GtkPopover" id="month_year_picker">
+                                            <child>
+                                              <object class="GtkBox">
+                                                <property name="spacing">8</property>
+                                                <child>
+                                                  <object class="GtkBox">
+                                                    <property name="orientation">vertical</property>
+                                                    <property name="spacing">2</property>
+                                                    <property name="valign">center</property>
+                                                    <property name="vexpand">True</property>
+                                                    <child>
+                                                      <object class="GtkLabel">
+                                                        <property name="label">Year</property>
+                                                        <property name="valign">center</property>
+                                                      </object>
+                                                    </child>
+                                                    <child>
+                                                      <object class="AdwSpinRow" id="year_selector">
+                                                        <property name="adjustment">
+                                                          <object class="GtkAdjustment"/>
+                                                        </property>
+                                                        <property name="climb-rate">1.0</property>
+                                                        <property name="hexpand">True</property>
+                                                        <property name="numeric">True</property>
+                                                        <property name="valign">center</property>
+                                                      </object>
+                                                    </child>
+                                                  </object>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkGrid" id="month_selector">
+                                                    <property name="column-spacing">6</property>
+                                                    <property name="row-spacing">6</property>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                            </child>
+                                          </object>
+                                        </property>
+                                        <property name="width-request">160</property>
                                       </object>
                                     </child>
                                     <child>
@@ -66,59 +108,10 @@
                               </object>
                             </child>
                             <child>
-                              <object class="GtkBox">
+                              <object class="GtkGrid" id="label_grid">
+                                <property name="column-homogeneous">True</property>
                                 <property name="margin-end">12</property>
                                 <property name="margin-start">12</property>
-                                <property name="margin-top">6</property>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="halign">center</property>
-                                    <property name="hexpand">True</property>
-                                    <property name="label">Monday</property>
-                                  </object>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="halign">center</property>
-                                    <property name="hexpand">True</property>
-                                    <property name="label">Tuesday</property>
-                                  </object>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="halign">center</property>
-                                    <property name="hexpand">True</property>
-                                    <property name="label">Wednesday</property>
-                                  </object>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="halign">center</property>
-                                    <property name="hexpand">True</property>
-                                    <property name="label">Thursday</property>
-                                  </object>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="halign">center</property>
-                                    <property name="hexpand">True</property>
-                                    <property name="label">Friday</property>
-                                  </object>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="halign">center</property>
-                                    <property name="hexpand">True</property>
-                                    <property name="label">Saturday</property>
-                                  </object>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="halign">center</property>
-                                    <property name="hexpand">True</property>
-                                    <property name="label">Sunday</property>
-                                  </object>
-                                </child>
                               </object>
                             </child>
                             <child>
@@ -288,7 +281,7 @@
                                             <property name="show-start-title-buttons">False</property>
                                             <property name="show-title">False</property>
                                             <child>
-                                              <object class="GtkDropDown">
+                                              <object class="GtkDropDown" id="header_selector">
                                                 <property name="model">
                                                   <object class="GtkStringList">
                                                     <items>
@@ -332,16 +325,16 @@
                                           <object class="AdwClamp">
                                             <property name="vexpand">True</property>
                                             <child>
-                                              <object class="GtkTextView">
+                                              <object class="GtkTextView" id="journal_entry">
                                                 <property name="accepts-tab">False</property>
                                                 <property name="bottom-margin">12</property>
                                                 <property name="css-classes">card</property>
                                                 <property name="left-margin">12</property>
-                                                <property name="right-margin">12</property>
-                                                <property name="top-margin">12</property>
                                                 <property name="margin-bottom">12</property>
                                                 <property name="margin-end">12</property>
                                                 <property name="margin-start">12</property>
+                                                <property name="right-margin">12</property>
+                                                <property name="top-margin">12</property>
                                                 <property name="vexpand">True</property>
                                                 <property name="wrap-mode">word-char</property>
                                               </object>
