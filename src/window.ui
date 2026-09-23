@@ -303,7 +303,7 @@
                                               </object>
                                             </child>
                                             <child>
-                                              <object class="GtkToggleButton" id="italics_toggle">
+                                              <object class="GtkToggleButton" id="italic_toggle">
                                                 <property name="icon-name">format-text-italic</property>
                                               </object>
                                             </child>
