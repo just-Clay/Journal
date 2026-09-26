@@ -7,9 +7,17 @@
   <requires lib="gtk" version="4.0"/>
   <requires lib="libadwaita" version="1.7"/>
   <template class="JournalWindow" parent="AdwApplicationWindow">
+    <property name="width-request">598</property>
+    <property name="height-request">292</property>
     <property name="default-height">600</property>
     <property name="default-width">800</property>
     <property name="title" translatable="yes">Journal</property>
+    <child>
+      <object class="AdwBreakpoint">
+        <condition>max-width: 748px</condition>
+        <setter object="split_view" property="collapsed">True</setter>
+      </object>
+    </child>
     <child>
       <object class="AdwOverlaySplitView" id="split_view">
         <!-- Main Content Area -->
@@ -117,14 +125,14 @@
                             <child>
                               <object class="GtkGrid" id="calendar_grid">
                                 <property name="column-homogeneous">True</property>
-                                <property name="column-spacing">6</property>
+                                <property name="column-spacing">9</property>
                                 <property name="hexpand">True</property>
                                 <property name="margin-bottom">12</property>
                                 <property name="margin-end">12</property>
                                 <property name="margin-start">12</property>
                                 <property name="margin-top">10</property>
                                 <property name="row-homogeneous">True</property>
-                                <property name="row-spacing">6</property>
+                                <property name="row-spacing">9</property>
                                 <property name="vexpand">True</property>
                               </object>
                             </child>
@@ -251,8 +259,8 @@
                                 <property name="show-back-button">False</property>
                                 <property name="show-start-title-buttons">False</property>
                                 <property name="title-widget">
-                                  <object class="AdwWindowTitle">
-                                    <property name="title">*date*</property>
+                                  <object class="AdwWindowTitle" id="editor_date">
+                                    <property name="title">date</property>
                                   </object>
                                 </property>
                                 <child type="start">
@@ -266,6 +274,7 @@
                             </child>
                             <child>
                               <object class="AdwOverlaySplitView" id="attachment_view">
+                                <property name="show-sidebar">False</property>
                                 <property name="content">
                                   <object class="GtkBox">
                                     <property name="orientation">vertical</property>

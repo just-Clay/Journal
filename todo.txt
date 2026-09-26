@@ -1,0 +1,7 @@
+1. Implement undoing style choices in the text editor, rather than just using the
+built in undo. Maybe we could save like the last 10 old buffers in a list and
+just revert back when they hit undo? Not a perfect solution, but one that would
+likely work.
+
+2. Actually start being able to save files. I have no clue how to do this but
+I gotta start somewhere.

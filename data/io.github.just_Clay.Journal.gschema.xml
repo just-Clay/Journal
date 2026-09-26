@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="journal">
 	<schema id="io.github.just_Clay.Journal" path="/io/github/just_Clay/Journal/">
+	  <key name="journal-location" type="s">
+      <default>""</default>
+      <summary>Journal storage location</summary>
+      <description>The directory path where journal entries are saved.</description>
+    </key>
 	</schema>
 </schemalist>

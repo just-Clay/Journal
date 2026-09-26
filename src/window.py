@@ -18,10 +18,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import calendar
+import pathlib
+import os
 from datetime import date
 from gi.repository import Adw
 from gi.repository import Gtk
 from gi.repository import Pango
+from gi.repository import Gio
 
 @Gtk.Template(resource_path='/io/github/just_Clay/Journal/window.ui')
 class JournalWindow(Adw.ApplicationWindow):
@@ -48,7 +51,7 @@ class JournalWindow(Adw.ApplicationWindow):
     bold_toggle=Gtk.Template.Child()
     italic_toggle=Gtk.Template.Child()
     header_selector=Gtk.Template.Child()
-
+    editor_date=Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -101,18 +104,35 @@ class JournalWindow(Adw.ApplicationWindow):
         self.buffer.connect_after("delete-range", self.after_delete)
         self.buffer.connect("notify::cursor-position", self.on_cursor_moved)
 
+        #Editor shortcuts
+        bold_action = Gio.SimpleAction.new("toggle-bold", None)
+        bold_action.connect("activate", self.on_shortcut_bold)
+        self.add_action(bold_action)
+
+        italic_action = Gio.SimpleAction.new("toggle-italic", None)
+        italic_action.connect("activate", self.on_shortcut_italic)
+        self.add_action(italic_action)
+
         #Making helpful variables for the calendar view
         self.today = date.today()
         self.month = self.today.month
         self.year = self.today.year
         self.day = self.today.day
+        self.days_with_entries = {}
 
         self.month_buttons = []
         self.day_buttons = []
 
         self.setup_calendar()
         self.update_month_year()
-        self.make_calendar()
+
+    def on_shortcut_bold(self, action, parameter):
+        if self.stack.get_visible_child_name() == "editor":
+            self.bold_toggle.set_active(not self.bold_toggle.get_active())
+
+    def on_shortcut_italic(self, action, parameter):
+        if self.stack.get_visible_child_name() == "editor":
+            self.italic_toggle.set_active(not self.italic_toggle.get_active())
 
 
     #Editor view functions.
@@ -123,23 +143,15 @@ class JournalWindow(Adw.ApplicationWindow):
         #Was an area selected when the toggle happened?
         #If so, we are going to change the tags for that area based off of the
         #starting tag of the selected area. Then we are going to adjust the
-        #current_tags and the toggle appropriately.
+        #current_tags
         if self.buffer.get_selection_bounds():
             start, end = self.buffer.get_selection_bounds()
             if self.bold not in start.get_tags():
                 self.buffer.apply_tag(self.bold, start, end)
                 self.current_tags["bold"] = True
-                #Don't forget to update the button so it looks right
-                self.updating_ui = True
-                self.bold_toggle.set_active(True)
-                self.updating_ui = False
             else:
                 self.buffer.remove_tag(self.bold, start, end)
                 self.current_tags["bold"] = False
-                #Updating the button
-                self.updating_ui = True
-                self.bold_toggle.set_active(False)
-                self.updating_ui = False
         #If no area was selected, we will just flip the toggle
         else:
             if self.current_tags["bold"]:
@@ -153,23 +165,16 @@ class JournalWindow(Adw.ApplicationWindow):
         #Was an area selected when the toggle happened?
         #If so, we are going to change the tags for that area based off of the
         #starting tag of the selected area. Then we are going to adjust the
-        #current_tags and the toggle appropriately.
+        #current_tags
         if self.buffer.get_selection_bounds():
             start, end = self.buffer.get_selection_bounds()
             if self.italic not in start.get_tags():
                 self.buffer.apply_tag(self.italic, start, end)
                 self.current_tags["italic"] = True
                 #Don't forget to update the button so it looks right
-                self.updating_ui = True
-                self.italic_toggle.set_active(True)
-                self.updating_ui = False
             else:
                 self.buffer.remove_tag(self.italic, start, end)
                 self.current_tags["italic"] = False
-                #Updating the button
-                self.updating_ui = True
-                self.italic_toggle.set_active(False)
-                self.updating_ui = False
         #If no area was selected, we will just flip the toggle
         else:
             if self.current_tags["italic"]:
@@ -359,6 +364,20 @@ class JournalWindow(Adw.ApplicationWindow):
             self.calendar_grid.remove(child)
             child = next_child
 
+    def index_days_with_entries(self):
+        app = self.get_application()
+        journal_path = app.settings.get_string("journal-location")
+        journal = pathlib.Path(journal_path)
+        if journal.exists() and journal.is_dir():
+            for year in journal.iterdir():
+                months_in_year = {}
+                for month in year.iterdir():
+                    days_in_month = []
+                    for day in month.iterdir():
+                        days_in_month.append(int(os.path.basename(day)))
+                    months_in_year[int(os.path.basename(month))] = days_in_month
+                self.days_with_entries[int(os.path.basename(year))] = months_in_year
+
     #Fill in calendar grid
     def make_calendar(self):
         self.clear_grid()
@@ -366,18 +385,32 @@ class JournalWindow(Adw.ApplicationWindow):
         cal = calendar.Calendar(firstweekday=0)
         weeks = cal.monthdayscalendar(self.year, self.month)
         no_btn = Gtk.Button()
+
+        self.index_days_with_entries()
+
         for weekNumber, week in enumerate(weeks):
             for day in week:
                 if day == 0:
                     pass
                 else:
                     day_button = Gtk.Button(label=str(day))
+
+                    if day == self.today.day and self.month == self.today.month and self.year == self.today.year:
+                        day_button.add_css_class("today-border")
+
+                    if self.year in self.days_with_entries:
+                        if self.month in self.days_with_entries[self.year]:
+                            if day in self.days_with_entries[self.year][self.month]:
+                                day_button.add_css_class("suggested-action")
+
                     day_button.connect("clicked", lambda _, d=day: self.on_day_selected(d))
                     self.calendar_grid.attach(day_button, day-(7*weekNumber), weekNumber, 1, 1)
 
     def on_day_selected(self, selected_day):
+        self.day = selected_day
+        months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+        self.editor_date.set_title(f"{months[self.month - 1]} {self.day}th, {self.year}")
         self.stack.set_visible_child_name("editor")
-        print(selected_day)
 
 
     #Update calendar view when moving to the previous month

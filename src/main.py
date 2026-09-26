@@ -19,15 +19,15 @@
 
 import sys
 import gi
+import os
 
 from gettext import gettext as _
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 
-from gi.repository import Gtk, Gio, Adw
+from gi.repository import Gtk, Gio, Adw, Gdk
 from .window import JournalWindow
-
 
 class JournalApplication(Adw.Application):
     """The main application singleton class."""
@@ -40,12 +40,24 @@ class JournalApplication(Adw.Application):
         self.create_action('about', self.on_about_action)
         self.create_action('preferences', self.on_preferences_action)
 
+        #Shortcuts
+        self.set_accels_for_action("win.toggle-bold", ["<primary>b"])
+        self.set_accels_for_action("win.toggle-italic", ["<primary>i"])
+
+        #Settings
+        self.settings = Gio.Settings.new('io.github.just_Clay.Journal')
+
     def do_activate(self):
         """Called when the application is activated.
 
         We raise the application's main window, creating it if
         necessary.
         """
+
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_data(b""".today-border {outline: 2px solid @accent_color; outline-offset: 2px;}""")
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
         win = self.props.active_window
         if not win:
             win = JournalWindow(application=self)
@@ -63,9 +75,34 @@ class JournalApplication(Adw.Application):
             copyright='© 2026 Connor Gable')
         about.present(self.props.active_window)
 
+
     def on_preferences_action(self, widget, _):
-        """Callback for the app.preferences action."""
-        print('app.preferences action activated')
+        builder = Gtk.Builder()
+        builder.add_from_resource("/io/github/just_Clay/Journal/preferences.ui")
+
+        prefs_window = builder.get_object("preferences_window")
+        prefs_window.set_transient_for(self.get_active_window())
+
+        file_location_label = builder.get_object("folder_location_title")
+        file_location_label.set_subtitle(os.path.basename(self.settings.get_string("journal-location")))
+
+        file_picker_btn = builder.get_object("file_picker")
+        file_picker_btn.connect("clicked", self.on_file_picker_clicked, prefs_window, file_location_label)
+
+        prefs_window.present()
+
+    def on_file_picker_clicked(self, button, parent_window, file_location_label):
+        dialog = Gtk.FileDialog()
+        dialog.set_title("Select Journal Folder")
+
+        dialog.select_folder(parent_window, None, self.on_folder_selected, file_location_label)
+
+    def on_folder_selected(self, dialog, result, file_location_label):
+        folder = dialog.select_folder_finish(result)
+        if folder:
+            folder_path = folder.get_path()
+            self.settings.set_string("journal-location", folder_path)
+            file_location_label.set_subtitle(os.path.basename(self.settings.get_string("journal-location")))
 
     def create_action(self, name, callback, shortcuts=None):
         """Add an application action.
@@ -81,7 +118,6 @@ class JournalApplication(Adw.Application):
         self.add_action(action)
         if shortcuts:
             self.set_accels_for_action(f"app.{name}", shortcuts)
-
 
 def main(version):
     """The application's entry point."""

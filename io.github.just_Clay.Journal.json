@@ -11,6 +11,7 @@
         "--device=dri",
         "--socket=wayland"
     ],
+
     "cleanup" : [
         "/include",
         "/lib/pkgconfig",
