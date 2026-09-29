@@ -30,6 +30,7 @@ journal_sources = [
   '__init__.py',
   'main.py',
   'window.py',
+  'editor.py',
 ]
 
 install_data(journal_sources, install_dir: moduledir)

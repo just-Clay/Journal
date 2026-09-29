@@ -1,30 +1,10 @@
-# window.py
-#
 # Copyright 2026 Connor Gable
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import calendar
-import pathlib
-import os
+import calendar, pathlib, os, shutil
 from datetime import date
-from gi.repository import Adw
-from gi.repository import Gtk
-from gi.repository import Pango
-from gi.repository import Gio
+from gi.repository import Adw, Gtk, Gdk, Gio
+from .editor import EditorController
 
 @Gtk.Template(resource_path='/io/github/just_Clay/Journal/window.ui')
 class JournalWindow(Adw.ApplicationWindow):
@@ -52,6 +32,11 @@ class JournalWindow(Adw.ApplicationWindow):
     italic_toggle=Gtk.Template.Child()
     header_selector=Gtk.Template.Child()
     editor_date=Gtk.Template.Child()
+
+    #Attachments
+    add_attachment=Gtk.Template.Child()
+    attachment_pane=Gtk.Template.Child()
+    attachment_view=Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -81,29 +66,6 @@ class JournalWindow(Adw.ApplicationWindow):
         self.year_selector.set_width_chars(5)
         self.year_selector.connect("notify::value", self.on_year_changed)
 
-        #Prepare buffer and tags
-        self.buffer = self.journal_entry.get_buffer()
-        self.bold = self.buffer.create_tag("bold", weight=Pango.Weight.BOLD)
-        self.italic = self.buffer.create_tag("italic", style=Pango.Style.ITALIC)
-        self.header1 = self.buffer.create_tag("header1", scale=2.2, weight=Pango.Weight.SEMIBOLD)
-        self.header2 = self.buffer.create_tag("header2", scale=2, weight=Pango.Weight.SEMIBOLD)
-        self.header3 = self.buffer.create_tag("header3", scale=1.8, weight=Pango.Weight.SEMIBOLD)
-        self.header4 = self.buffer.create_tag("header4", scale=1.6, weight=Pango.Weight.SEMIBOLD)
-        self.header5 = self.buffer.create_tag("header5", scale=1.4, weight=Pango.Weight.SEMIBOLD)
-        self.header6 = self.buffer.create_tag("header6", scale=1.2, weight=Pango.Weight.SEMIBOLD)
-        self.updating_ui = False
-        self.current_tags = {"bold": False, "italic": False, "header": 0}
-        self.cursor_position = -1
-        self.old_length = self.buffer.get_char_count()
-
-        #Editor buttons
-        self.bold_toggle.connect("toggled", lambda _: self.on_bold_toggled())
-        self.italic_toggle.connect("toggled", lambda _: self.on_italic_toggled())
-        self.header_selector.connect("notify::selected", lambda *_: self.on_header_selected())
-        self.buffer.connect_after("insert-text", self.on_write)
-        self.buffer.connect_after("delete-range", self.after_delete)
-        self.buffer.connect("notify::cursor-position", self.on_cursor_moved)
-
         #Editor shortcuts
         bold_action = Gio.SimpleAction.new("toggle-bold", None)
         bold_action.connect("activate", self.on_shortcut_bold)
@@ -112,6 +74,12 @@ class JournalWindow(Adw.ApplicationWindow):
         italic_action = Gio.SimpleAction.new("toggle-italic", None)
         italic_action.connect("activate", self.on_shortcut_italic)
         self.add_action(italic_action)
+
+        #Attachment Buttons
+        self.add_attachment.connect("clicked", lambda _: self.on_add_attachment())
+        drop_target = Gtk.DropTarget.new(Gdk.FileList, Gdk.DragAction.COPY)
+        drop_target.connect("drop", self.on_files_dropped)
+        self.add_controller(drop_target)
 
         #Making helpful variables for the calendar view
         self.today = date.today()
@@ -126,6 +94,9 @@ class JournalWindow(Adw.ApplicationWindow):
         self.setup_calendar()
         self.update_month_year()
 
+        self.editor_controller = EditorController(self.journal_entry, self.bold_toggle,
+        self.italic_toggle, self.header_selector, self.stack)
+
     def on_shortcut_bold(self, action, parameter):
         if self.stack.get_visible_child_name() == "editor":
             self.bold_toggle.set_active(not self.bold_toggle.get_active())
@@ -133,192 +104,6 @@ class JournalWindow(Adw.ApplicationWindow):
     def on_shortcut_italic(self, action, parameter):
         if self.stack.get_visible_child_name() == "editor":
             self.italic_toggle.set_active(not self.italic_toggle.get_active())
-
-
-    #Editor view functions.
-    def on_bold_toggled(self):
-        #Stop if we are just updating ui
-        if self.updating_ui:
-            return
-        #Was an area selected when the toggle happened?
-        #If so, we are going to change the tags for that area based off of the
-        #starting tag of the selected area. Then we are going to adjust the
-        #current_tags
-        if self.buffer.get_selection_bounds():
-            start, end = self.buffer.get_selection_bounds()
-            if self.bold not in start.get_tags():
-                self.buffer.apply_tag(self.bold, start, end)
-                self.current_tags["bold"] = True
-            else:
-                self.buffer.remove_tag(self.bold, start, end)
-                self.current_tags["bold"] = False
-        #If no area was selected, we will just flip the toggle
-        else:
-            if self.current_tags["bold"]:
-                self.current_tags["bold"] = False
-            else:
-                self.current_tags["bold"] = True
-
-    def on_italic_toggled(self):
-        if self.updating_ui:
-            return
-        #Was an area selected when the toggle happened?
-        #If so, we are going to change the tags for that area based off of the
-        #starting tag of the selected area. Then we are going to adjust the
-        #current_tags
-        if self.buffer.get_selection_bounds():
-            start, end = self.buffer.get_selection_bounds()
-            if self.italic not in start.get_tags():
-                self.buffer.apply_tag(self.italic, start, end)
-                self.current_tags["italic"] = True
-                #Don't forget to update the button so it looks right
-            else:
-                self.buffer.remove_tag(self.italic, start, end)
-                self.current_tags["italic"] = False
-        #If no area was selected, we will just flip the toggle
-        else:
-            if self.current_tags["italic"]:
-                self.current_tags["italic"] = False
-            else:
-                self.current_tags["italic"] = True
-
-    def on_header_selected(self):
-        if self.updating_ui:
-            return
-
-        styles = [self.header1, self.header2, self.header3, self.header4, self.header5, self.header6]
-        style_num = self.header_selector.get_selected()
-        self.current_tags["header"] = style_num
-
-        #Select whole line
-        if self.buffer.get_selection_bounds():
-            start, end = self.buffer.get_selection_bounds()
-        else:
-            start = self.buffer.get_iter_at_mark(self.buffer.get_insert())
-            end = start.copy()
-        start.set_line_offset(0)
-        if not end.ends_line():
-            end.forward_to_line_end()
-
-        for style in styles:
-            self.buffer.remove_tag(style, start, end)
-        if style_num != 0:
-            self.buffer.apply_tag(styles[style_num - 1], start, end)
-
-    #This fixes a funky header bug where you could get to different header tags
-    #on the same line by making the different tags on seperate lines
-    #and then merging them through deletion. We want to avoid this because
-    #we will be saving the files as markdown, which cannot have header text and
-    #non-header text in the same line.
-    def after_delete(self, buffer, start_deletion, end_deletion):
-        start = start_deletion.copy()
-        end = end_deletion.copy()
-        start.set_line_offset(0)
-        if not end.ends_line():
-            end.forward_to_line_end()
-
-        applied_tags = start.get_tags()
-        if self.bold in applied_tags:
-            applied_tags.remove(self.bold)
-        if self.italic in applied_tags:
-            applied_tags.remove(self.italic)
-        if applied_tags == []:
-            styles = [self.header1, self.header2, self.header3, self.header4, self.header5, self.header6]
-            for style in styles:
-                self.buffer.remove_tag(style, start, end)
-        else:
-            styles = [self.header1, self.header2, self.header3, self.header4, self.header5, self.header6]
-            for style in styles:
-                self.buffer.remove_tag(style, start, end)
-            self.buffer.apply_tag(applied_tags[0], start, end)
-
-    def on_write(self, buffer, location, text, length):
-        if "\n" in text:
-            self.current_tags["header"] = 0
-            self.updating_ui = True
-            self.header_selector.set_selected(0)
-            self.updating_ui = False
-
-        end = location.copy()
-        start = location.copy()
-        start.backward_chars(len(text))
-
-        if self.current_tags["bold"]:
-            buffer.apply_tag(self.bold, start, end)
-
-        if self.current_tags["italic"]:
-            buffer.apply_tag(self.italic, start, end)
-
-        if self.current_tags["header"] != 0:
-            headers = [self.header1, self.header2, self.header3, self.header4, self.header5, self.header6]
-            buffer.apply_tag(headers[self.current_tags["header"] - 1], start, end)
-
-    #When it moves, update the tags
-    #in current tags based on the surrounding tags at the new location. If there
-    #is no letters to the left of the cursor, use the letters to the right, but
-    #otherwise, base this off of the character to the left of where the cursor
-    #has moved
-    def on_cursor_moved(self, buffer, pspec):
-        cursor_offset = buffer.get_property("cursor-position")
-        character_count = self.buffer.get_char_count()
-
-        if (cursor_offset - 1 != self.cursor_position or character_count - 1 != self.old_length) and character_count != 0:
-            #We must have jumped or deleted something
-            location = buffer.get_iter_at_offset(cursor_offset)
-            target = location.copy()
-            if not target.starts_line():
-                target.backward_char()
-            applied_tags = target.get_tags()
-            read_tags = []
-            for tag in applied_tags:
-                read_tags.append(tag.get_property("name"))
-
-            self.updating_ui = True
-
-            if "bold" in read_tags:
-                self.current_tags["bold"] = True
-                self.bold_toggle.set_active(True)
-                read_tags.remove("bold")
-            else:
-                self.current_tags["bold"] = False
-                self.bold_toggle.set_active(False)
-            if "italic" in read_tags:
-                self.current_tags["italic"] = True
-                self.italic_toggle.set_active(True)
-                read_tags.remove("italic")
-            else:
-                self.current_tags["italic"] = False
-                self.italic_toggle.set_active(False)
-
-            if read_tags == []:
-                self.current_tags["header"] = 0
-                self.header_selector.set_selected(0)
-            else:
-                header = read_tags[0]
-                if header == "header1":
-                    self.current_tags["header"] = 1
-                    self.header_selector.set_selected(1)
-                elif header == "header2":
-                    self.current_tags["header"] = 2
-                    self.header_selector.set_selected(2)
-                elif header == "header3":
-                    self.current_tags["header"] = 3
-                    self.header_selector.set_selected(3)
-                elif header == "header4":
-                    self.current_tags["header"] = 4
-                    self.header_selector.set_selected(4)
-                elif header == "header5":
-                    self.current_tags["header"] = 5
-                    self.header_selector.set_selected(5)
-                elif header == "header6":
-                    self.current_tags["header"] = 6
-                    self.header_selector.set_selected(6)
-
-
-            self.updating_ui = False
-
-        self.cursor_position = cursor_offset
-        self.old_length = character_count
 
     #Update the month year selector to reflect correct month and year in calendar view
     def update_month_year(self):
@@ -368,6 +153,8 @@ class JournalWindow(Adw.ApplicationWindow):
         app = self.get_application()
         journal_path = app.settings.get_string("journal-location")
         journal = pathlib.Path(journal_path)
+
+
         if journal.exists() and journal.is_dir():
             for year in journal.iterdir():
                 months_in_year = {}
@@ -412,6 +199,52 @@ class JournalWindow(Adw.ApplicationWindow):
         self.editor_date.set_title(f"{months[self.month - 1]} {self.day}th, {self.year}")
         self.stack.set_visible_child_name("editor")
 
+        #The rest of this function is just handling attachments for the attachment pane
+        child = self.attachment_pane.get_first_child()
+        while child is not None:
+            next_child = child.get_next_sibling()
+            self.attachment_pane.remove(child)
+            child = next_child
+
+        app = self.get_application()
+        journal_path = app.settings.get_string("journal-location")
+        attachments_path = pathlib.Path(f"{journal_path}/{self.year}/{self.month}/{self.day}")
+
+        for file in attachments_path.iterdir():
+            box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+            box.add_css_class("card")
+            box.set_margin_start(10)
+            box.set_margin_end(10)
+
+            inner_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+            inner_box.set_margin_start(10)
+            inner_box.set_margin_end(10)
+            inner_box.set_margin_top(10)
+            inner_box.set_margin_bottom(10)
+            inner_box.set_spacing(10)
+
+            label = Gtk.Label(label=file.name)
+            label.set_hexpand(True)
+            label.set_xalign(0)
+            label.set_wrap(True)
+
+            open_button = Gtk.Button(icon_name="document-open-symbolic")
+            open_button.set_valign(Gtk.Align.CENTER)
+            open_button.set_halign(Gtk.Align.END)
+
+            delete_button = Gtk.Button(icon_name="user-trash-symbolic")
+            delete_button.set_valign(Gtk.Align.CENTER)
+            open_button.set_halign(Gtk.Align.END)
+            delete_button.add_css_class("destructive-action")
+
+            open_button.connect("clicked", lambda _, f=file: self.open_attachment(f))
+            delete_button.connect("clicked", lambda _, f=file: self.delete_attachment(f))
+
+            inner_box.append(label)
+            inner_box.append(open_button)
+            box.append(inner_box)
+            inner_box.append(delete_button)
+            self.attachment_pane.append(box)
 
     #Update calendar view when moving to the previous month
     def move_prev_month(self):
@@ -432,3 +265,49 @@ class JournalWindow(Adw.ApplicationWindow):
             self.month = 1
         self.update_month_year()
         self.make_calendar()
+
+        #Day folder must first exist in order to add attachment
+    def on_add_attachment(self):
+        dialog = Gtk.FileDialog()
+        dialog.set_title("Add Attachment")
+
+        dialog.open(self, None, self.on_file_selected)
+
+    def on_file_selected(self, dialog, result):
+        app = self.get_application()
+        journal_path = app.settings.get_string("journal-location")
+
+        file = dialog.open_finish(result)
+        file_name = file.get_basename()
+        new_path = f"{journal_path}/{self.year}/{self.month}/{self.day}/{file_name}"
+        shutil.copy(file.get_path(),(new_path))
+        self.on_day_selected(self.day)
+
+    def on_files_dropped(self, drop_target, file_list, x, y):
+        if self.stack.get_visible_child_name() != "editor" or not self.attachment_view.get_show_sidebar():
+            return
+
+        app = self.get_application()
+        journal_path = app.settings.get_string("journal-location")
+        target_dir = f"{journal_path}/{self.year}/{self.month}/{self.day}"
+
+        for gio_file in file_list.get_files():
+            source_path = gio_file.get_path()
+            if source_path:
+                file_name = gio_file.get_basename()
+                new_path = f"{target_dir}/{file_name}"
+
+                shutil.copy(source_path, new_path)
+
+        self.on_day_selected(self.day)
+
+    def open_attachment(self, file_path):
+        gio_file = Gio.File.new_for_path(str(file_path))
+
+        launcher = Gtk.FileLauncher.new(gio_file)
+        launcher.set_always_ask(False)
+        launcher.launch(self, None, None)
+
+    def delete_attachment(self, file_path):
+        file_path.unlink()
+        self.on_day_selected(self.day)

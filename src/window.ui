@@ -7,13 +7,14 @@
   <requires lib="gtk" version="4.0"/>
   <requires lib="libadwaita" version="1.7"/>
   <template class="JournalWindow" parent="AdwApplicationWindow">
-    <property name="width-request">598</property>
-    <property name="height-request">292</property>
     <property name="default-height">600</property>
     <property name="default-width">800</property>
+    <property name="height-request">292</property>
     <property name="title" translatable="yes">Journal</property>
+    <property name="width-request">598</property>
     <child>
       <object class="AdwBreakpoint">
+        <!-- Custom object fragments -->
         <condition>max-width: 748px</condition>
         <setter object="split_view" property="collapsed">True</setter>
       </object>
@@ -265,7 +266,7 @@
                                 </property>
                                 <child type="start">
                                   <object class="GtkToggleButton">
-                                    <property name="active" bind-source="split_view" bind-property="show-sidebar" bind-flags="sync-create|bidirectional"/>
+                                    <property name="active" bind-source="attachment_view" bind-property="show-sidebar" bind-flags="sync-create|bidirectional"/>
                                     <property name="icon-name">sidebar-show-symbolic</property>
                                     <property name="tooltip-text" translatable="yes">Toggle Sidebar</property>
                                   </object>
@@ -274,7 +275,6 @@
                             </child>
                             <child>
                               <object class="AdwOverlaySplitView" id="attachment_view">
-                                <property name="show-sidebar">False</property>
                                 <property name="content">
                                   <object class="GtkBox">
                                     <property name="orientation">vertical</property>
@@ -337,7 +337,7 @@
                                               <object class="GtkTextView" id="journal_entry">
                                                 <property name="accepts-tab">False</property>
                                                 <property name="bottom-margin">12</property>
-                                                <property name="css-classes">card</property>
+                                                <property name="css-classes">flat</property>
                                                 <property name="left-margin">12</property>
                                                 <property name="margin-bottom">12</property>
                                                 <property name="margin-end">12</property>
@@ -354,6 +354,7 @@
                                     </child>
                                   </object>
                                 </property>
+                                <property name="show-sidebar">False</property>
                                 <property name="sidebar">
                                   <object class="GtkBox">
                                     <property name="css-classes">background</property>
@@ -365,6 +366,7 @@
                                     <child>
                                       <object class="GtkBox">
                                         <property name="css-classes">card</property>
+                                        <property name="hexpand">True</property>
                                         <property name="margin-bottom">12</property>
                                         <property name="margin-end">12</property>
                                         <property name="margin-top">6</property>
@@ -391,8 +393,15 @@
                                           </object>
                                         </child>
                                         <child>
-                                          <object class="AdwCarousel">
+                                          <object class="GtkScrolledWindow">
                                             <property name="vexpand">True</property>
+                                            <property name="min-content-width">280</property>
+                                            <child>
+                                              <object class="GtkBox" id="attachment_pane">
+                                                <property name="orientation">vertical</property>
+                                                <property name="spacing">6</property>
+                                              </object>
+                                            </child>
                                           </object>
                                         </child>
                                       </object>
@@ -400,6 +409,7 @@
                                   </object>
                                 </property>
                                 <property name="sidebar-position">end</property>
+                                <property name="sidebar-width-fraction">0.35</property>
                               </object>
                             </child>
                           </object>
@@ -573,3 +583,4 @@
     </item>
   </menu>
 </interface>
+
