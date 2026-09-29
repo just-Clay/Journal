@@ -1,10 +1,11 @@
 # Copyright 2026 Connor Gable
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import calendar, pathlib, os, shutil
+import calendar, os, shutil
 from datetime import date
 from gi.repository import Adw, Gtk, Gdk, Gio
 from .editor import EditorController
+from .storage import StorageController
 
 @Gtk.Template(resource_path='/io/github/just_Clay/Journal/window.ui')
 class JournalWindow(Adw.ApplicationWindow):
@@ -76,17 +77,25 @@ class JournalWindow(Adw.ApplicationWindow):
         self.add_action(italic_action)
 
         #Attachment Buttons
-        self.add_attachment.connect("clicked", lambda _: self.on_add_attachment())
+        self.add_attachment.connect("clicked", lambda _: self.select_file())
         drop_target = Gtk.DropTarget.new(Gdk.FileList, Gdk.DragAction.COPY)
         drop_target.connect("drop", self.on_files_dropped)
         self.add_controller(drop_target)
 
         #Making helpful variables for the calendar view
+        self.months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+        self.days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         self.today = date.today()
         self.month = self.today.month
         self.year = self.today.year
         self.day = self.today.day
         self.days_with_entries = {}
+
+        #Set up storage controller
+        app = self.get_application()
+        self.journal_path = app.settings.get_string("journal-location")
+        self.storage_controller = StorageController(self.journal_path,
+        self.year, self.month, self.day)
 
         self.month_buttons = []
         self.day_buttons = []
@@ -119,10 +128,10 @@ class JournalWindow(Adw.ApplicationWindow):
 
     #Make weekday row for calendar view and prepare month buttons in the month year selector
     def setup_calendar(self):
-        for weekday_number, weekday in enumerate(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]):
+        for weekday_number, weekday in enumerate(self.days):
             day_label = Gtk.Label(label=weekday)
             self.label_grid.attach(day_label, weekday_number, 0, 1, 1)
-        for month_number, month in enumerate(["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]):
+        for month_number, month in enumerate(self.months):
             month_button = Gtk.Button(label=month)
             m_num = month_number + 1
             month_button.connect("clicked", lambda _, m=m_num: self.on_month_selected(m))
@@ -132,12 +141,14 @@ class JournalWindow(Adw.ApplicationWindow):
     #Update the calendar view when a new month is selected in the month year selector
     def on_month_selected(self, selected_month):
         self.month = selected_month
+        self.storage_controller.month = selected_month
         self.update_month_year()
         self.make_calendar()
 
     #Update the calendar view when a new year is selected in the month year selector
     def on_year_changed(self, year_selector, parameter):
         self.year = int(year_selector.get_value())
+        self.storage_controller.year = self.year
         self.update_month_year()
         self.make_calendar()
 
@@ -149,22 +160,6 @@ class JournalWindow(Adw.ApplicationWindow):
             self.calendar_grid.remove(child)
             child = next_child
 
-    def index_days_with_entries(self):
-        app = self.get_application()
-        journal_path = app.settings.get_string("journal-location")
-        journal = pathlib.Path(journal_path)
-
-
-        if journal.exists() and journal.is_dir():
-            for year in journal.iterdir():
-                months_in_year = {}
-                for month in year.iterdir():
-                    days_in_month = []
-                    for day in month.iterdir():
-                        days_in_month.append(int(os.path.basename(day)))
-                    months_in_year[int(os.path.basename(month))] = days_in_month
-                self.days_with_entries[int(os.path.basename(year))] = months_in_year
-
     #Fill in calendar grid
     def make_calendar(self):
         self.clear_grid()
@@ -173,7 +168,7 @@ class JournalWindow(Adw.ApplicationWindow):
         weeks = cal.monthdayscalendar(self.year, self.month)
         no_btn = Gtk.Button()
 
-        self.index_days_with_entries()
+        days_with_entries = self.storage_controller.index_days_with_entries()
 
         for weekNumber, week in enumerate(weeks):
             for day in week:
@@ -185,9 +180,9 @@ class JournalWindow(Adw.ApplicationWindow):
                     if day == self.today.day and self.month == self.today.month and self.year == self.today.year:
                         day_button.add_css_class("today-border")
 
-                    if self.year in self.days_with_entries:
-                        if self.month in self.days_with_entries[self.year]:
-                            if day in self.days_with_entries[self.year][self.month]:
+                    if self.year in days_with_entries:
+                        if self.month in days_with_entries[self.year]:
+                            if day in days_with_entries[self.year][self.month]:
                                 day_button.add_css_class("suggested-action")
 
                     day_button.connect("clicked", lambda _, d=day: self.on_day_selected(d))
@@ -195,8 +190,8 @@ class JournalWindow(Adw.ApplicationWindow):
 
     def on_day_selected(self, selected_day):
         self.day = selected_day
-        months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-        self.editor_date.set_title(f"{months[self.month - 1]} {self.day}th, {self.year}")
+        self.storage_controller.day = selected_day
+        self.editor_date.set_title(f"{self.months[self.month - 1]} {self.day}th, {self.year}")
         self.stack.set_visible_child_name("editor")
 
         #The rest of this function is just handling attachments for the attachment pane
@@ -206,11 +201,14 @@ class JournalWindow(Adw.ApplicationWindow):
             self.attachment_pane.remove(child)
             child = next_child
 
-        app = self.get_application()
-        journal_path = app.settings.get_string("journal-location")
-        attachments_path = pathlib.Path(f"{journal_path}/{self.year}/{self.month}/{self.day}")
+        attachments = self.storage_controller.fetch_attachments()
 
-        for file in attachments_path.iterdir():
+        if attachments:
+            self.attachment_view.set_show_sidebar(True)
+        else:
+            self.attachment_view.set_show_sidebar(False)
+
+        for file in attachments:
             box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
             box.add_css_class("card")
             box.set_margin_start(10)
@@ -237,8 +235,8 @@ class JournalWindow(Adw.ApplicationWindow):
             open_button.set_halign(Gtk.Align.END)
             delete_button.add_css_class("destructive-action")
 
-            open_button.connect("clicked", lambda _, f=file: self.open_attachment(f))
-            delete_button.connect("clicked", lambda _, f=file: self.delete_attachment(f))
+            open_button.connect("clicked", lambda _, f=file: self.open(f))
+            delete_button.connect("clicked", lambda _, f=file: self.delete_file(f))
 
             inner_box.append(label)
             inner_box.append(open_button)
@@ -253,6 +251,8 @@ class JournalWindow(Adw.ApplicationWindow):
         else:
             self.year = self.year - 1
             self.month = 12
+        self.storage_controller.month = self.month
+        self.storage_controller.year = self.year
         self.update_month_year()
         self.make_calendar()
 
@@ -263,51 +263,35 @@ class JournalWindow(Adw.ApplicationWindow):
         else:
             self.year = self.year + 1
             self.month = 1
+        self.storage_controller.month = self.month
+        self.storage_controller.year = self.year
         self.update_month_year()
         self.make_calendar()
 
-        #Day folder must first exist in order to add attachment
-    def on_add_attachment(self):
+    #Day folder must first exist in order to add attachment
+    def select_file(self):
         dialog = Gtk.FileDialog()
         dialog.set_title("Add Attachment")
-
         dialog.open(self, None, self.on_file_selected)
 
     def on_file_selected(self, dialog, result):
-        app = self.get_application()
-        journal_path = app.settings.get_string("journal-location")
-
         file = dialog.open_finish(result)
-        file_name = file.get_basename()
-        new_path = f"{journal_path}/{self.year}/{self.month}/{self.day}/{file_name}"
-        shutil.copy(file.get_path(),(new_path))
+        self.storage_controller.add_attachment(file)
         self.on_day_selected(self.day)
 
     def on_files_dropped(self, drop_target, file_list, x, y):
         if self.stack.get_visible_child_name() != "editor" or not self.attachment_view.get_show_sidebar():
             return
-
-        app = self.get_application()
-        journal_path = app.settings.get_string("journal-location")
-        target_dir = f"{journal_path}/{self.year}/{self.month}/{self.day}"
-
-        for gio_file in file_list.get_files():
-            source_path = gio_file.get_path()
-            if source_path:
-                file_name = gio_file.get_basename()
-                new_path = f"{target_dir}/{file_name}"
-
-                shutil.copy(source_path, new_path)
-
+        self.storage_controller.add_dropped_attachments(file_list)
         self.on_day_selected(self.day)
 
-    def open_attachment(self, file_path):
+    def open (self, file_path):
         gio_file = Gio.File.new_for_path(str(file_path))
 
         launcher = Gtk.FileLauncher.new(gio_file)
         launcher.set_always_ask(False)
         launcher.launch(self, None, None)
 
-    def delete_attachment(self, file_path):
-        file_path.unlink()
-        self.on_day_selected(self.day)
+    def delete_file(self, file_path):
+        self.storage_controller.delete(file_path)
+        self. on_day_selected(self.day)
