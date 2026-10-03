@@ -266,7 +266,7 @@
                                 </property>
                                 <child type="start">
                                   <object class="GtkToggleButton">
-                                    <property name="active" bind-source="attachment_view" bind-property="show-sidebar" bind-flags="sync-create|bidirectional"/>
+                                    <property name="active" bind-source="split_view" bind-property="show-sidebar" bind-flags="sync-create|bidirectional"/>
                                     <property name="icon-name">sidebar-show-symbolic</property>
                                     <property name="tooltip-text" translatable="yes">Toggle Sidebar</property>
                                   </object>

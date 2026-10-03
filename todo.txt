@@ -3,5 +3,14 @@ built in undo. Maybe we could save like the last 10 old buffers in a list and
 just revert back when they hit undo? Not a perfect solution, but one that would
 likely work.
 
-2. Actually start being able to save files. I have no clue how to do this but
-I gotta start somewhere.
+2. Right now, I don't actually delete the month and year folders if they are empty.
+I only delete the day folders when they are empty. I just don't really think that
+this is that big of a problem, but this should be fixed at some point.
+
+3. Show attachment images in the attachment pane
+
+4. Add the timeline page
+
+5. Add the on this day page
+
+6. Add the search page

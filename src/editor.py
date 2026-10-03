@@ -108,6 +108,9 @@ class EditorController:
             self.buffer.apply_tag(self.styles[style_num - 1], start, end)
 
     def on_write(self, buffer, location, text, length):
+        if self.updating_ui:
+            return
+
         if "\n" in text:
             self.current_tags["header"] = 0
             self.updating_ui = True
@@ -141,12 +144,9 @@ class EditorController:
             applied_tags.remove(self.bold)
         if self.italic in applied_tags:
             applied_tags.remove(self.italic)
-        if applied_tags == []:
-            for style in self.styles:
-                self.buffer.remove_tag(style, start, end)
-        else:
-            for style in self.styles:
-                self.buffer.remove_tag(style, start, end)
+        for style in self.styles:
+            self.buffer.remove_tag(style, start, end)
+        if applied_tags:
             self.buffer.apply_tag(applied_tags[0], start, end)
 
     #This function is ugly but I don't want to clean it up tbh
@@ -155,7 +155,7 @@ class EditorController:
         character_count = self.buffer.get_char_count()
 
         #Check if we jumped forward or moved backwards
-        if (cursor_offset - 1 != self.cursor_position or character_count - 1 != self.old_length) and character_count != 0:
+        if cursor_offset != self.cursor_position and (cursor_offset - 1 != self.cursor_position or character_count - 1 != self.old_length) and character_count != 0:
             location = buffer.get_iter_at_offset(cursor_offset)
             target = location.copy()
             if not target.starts_line():
@@ -187,27 +187,165 @@ class EditorController:
                 self.header_selector.set_selected(0)
             else:
                 header = read_tags[0]
-                if header == "header1":
-                    self.current_tags["header"] = 1
-                    self.header_selector.set_selected(1)
-                elif header == "header2":
-                    self.current_tags["header"] = 2
-                    self.header_selector.set_selected(2)
-                elif header == "header3":
-                    self.current_tags["header"] = 3
-                    self.header_selector.set_selected(3)
-                elif header == "header4":
-                    self.current_tags["header"] = 4
-                    self.header_selector.set_selected(4)
-                elif header == "header5":
-                    self.current_tags["header"] = 5
-                    self.header_selector.set_selected(5)
-                elif header == "header6":
-                    self.current_tags["header"] = 6
-                    self.header_selector.set_selected(6)
+                level = int(header[-1])
+                self.current_tags["header"] = level
+                self.header_selector.set_selected(level)
 
 
             self.updating_ui = False
 
         self.cursor_position = cursor_offset
         self.old_length = character_count
+
+    def translate_buffer(self):
+        def apply_closer(current_line, current_closer):
+            if not current_closer:
+                return current_line
+            trailing_whitespace = ""
+            while current_line and current_line[-1].isspace():
+                trailing_whitespace = current_line[-1] + trailing_whitespace
+                current_line = current_line[:-1]
+            return current_line + current_closer + trailing_whitespace
+
+        start_line = self.buffer.get_start_iter()
+        end = self.buffer.get_end_iter()
+        markdown = ""
+
+        while not start_line.equal(end):
+            end_line = start_line.copy()
+            end_line.forward_line()
+
+            line_tags = [tag.get_property("name") for tag in start_line.get_tags()]
+            if "header1" in line_tags:
+                markdown += "# "
+            elif "header2" in line_tags:
+                markdown += "## "
+            elif "header3" in line_tags:
+                markdown += "### "
+            elif "header4" in line_tags:
+                markdown += "#### "
+            elif "header5" in line_tags:
+                markdown += "##### "
+            elif "header6" in line_tags:
+                markdown += "###### "
+
+            char = start_line.copy()
+            bold_italic = False
+            bold = False
+            italic = False
+            line = ""
+            closer = ""
+            while not char.equal(end_line):
+                char_tags = [tag.get_property("name") for tag in char.get_tags()]
+                if "bold" in char_tags and "italic" in char_tags:
+                    if bold_italic:
+                        line += char.get_char()
+                    else:
+                        bold = False
+                        italic = False
+                        bold_italic = True
+                        line = apply_closer(line, closer)
+                        closer = "***"
+                        line += "***"
+                        line += char.get_char()
+
+                elif "bold" in char_tags:
+                    if bold:
+                        line += char.get_char()
+                    else:
+                        bold = True
+                        italic = False
+                        bold_italic = False
+                        line = apply_closer(line, closer)
+                        closer = "**"
+                        line += "**"
+                        line += char.get_char()
+
+                elif "italic" in char_tags:
+                    if italic:
+                        line += char.get_char()
+                    else:
+                        bold = False
+                        italic = True
+                        bold_italic = False
+                        line = apply_closer(line, closer)
+                        closer = "*"
+                        line += "*"
+                        line += char.get_char()
+                else:
+                    if not bold and not italic and not bold_italic:
+                        line += char.get_char()
+                    else:
+                        bold = False
+                        italic = False
+                        bold_italic = False
+                        line = apply_closer(line, closer)
+                        closer = ""
+                        line += char.get_char()
+
+                char.forward_char()
+
+            line = apply_closer(line, closer)
+            closer = ""
+            markdown += line
+            start_line = end_line
+
+        return markdown
+
+    def load_buffer(self, markdown_text):
+        self.updating_ui = True
+        self.buffer.set_text("")
+
+        lines = markdown_text.split("\n")
+
+        for line_idx, line in enumerate(lines):
+            active_tags = []
+            if line.startswith("#"):
+                level = len(line) - len(line.lstrip("#"))
+                if 1 <= level <= 6 and len(line) > level and line[level] == " ":
+                    active_tags.append(self.styles[level - 1])
+                    line = line[level + 1:]
+
+            bold = False
+            italic = False
+            i = 0
+
+            while i < len(line):
+                if line[i:i+3] == "***":
+                    bold = not bold
+                    italic = not italic
+                    i += 3
+                elif line[i:i+2] == "**":
+                    bold = not bold
+                    i += 2
+                elif line[i:i+1] == "*":
+                    italic = not italic
+                    i += 1
+                else:
+                    start = i
+                    while i < len(line) and line[i] != "*":
+                        i += 1
+                    text_chunk = line[start:i]
+
+                    chunk_tags = list(active_tags)
+                    if bold:
+                        chunk_tags.append(self.bold)
+                    if italic:
+                        chunk_tags.append(self.italic)
+
+                    end_iter = self.buffer.get_end_iter()
+                    start_offset = end_iter.get_offset()
+
+                    self.buffer.insert(end_iter, text_chunk)
+
+                    start_iter = self.buffer.get_iter_at_offset(start_offset)
+                    new_end_iter = self.buffer.get_end_iter()
+
+                    for tag in chunk_tags:
+                        self.buffer.apply_tag(tag, start_iter, new_end_iter)
+
+            if line_idx < len(lines) - 1:
+                end_buffer = self.buffer.get_end_iter()
+                self.buffer.insert(end_buffer, "\n")
+
+        self.updating_ui = False
