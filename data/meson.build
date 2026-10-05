@@ -35,7 +35,6 @@ test('Validate schema file',
 
 
 service_conf = configuration_data()
-service_conf.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))
 configure_file(
   input: 'io.github.just_Clay.Journal.service.in',
   output: 'io.github.just_Clay.Journal.service',
