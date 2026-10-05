@@ -16,10 +16,10 @@
           <object class="AdwPreferencesGroup">
             <property name="halign">center</property>
             <child>
-              <object class="AdwActionRow" id = "folder_location_title">
-                <property name="subtitle-selectable">True</property>
+              <object class="AdwActionRow" id="folder_location_title">
                 <property name="halign">center</property>
                 <property name="subtitle">No Location Selected</property>
+                <property name="subtitle-selectable">True</property>
                 <property name="title">File Location</property>
                 <child>
                   <object class="GtkButton" id="file_picker">

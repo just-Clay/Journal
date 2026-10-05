@@ -43,10 +43,46 @@ class JournalApplication(Adw.Application):
         css_provider.load_from_data(b""".today-border {outline: 2px solid @accent_color; outline-offset: 2px;}""")
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
+        journal_path = self.settings.get_string("journal-location")
+
+        if not journal_path or not os.path.isdir(journal_path):
+            self.show_welcome_window()
+        else:
+            self.show_main_window()
+
+    def show_main_window(self):
         win = self.props.active_window
         if not win:
             win = JournalWindow(application=self)
         win.present()
+
+    def show_welcome_window(self):
+        builder = Gtk.Builder()
+        builder.add_from_resource("/io/github/just_Clay/Journal/welcome.ui")
+
+        welcome_window = builder.get_object("welcome_window")
+        welcome_window.set_transient_for(self.get_active_window())
+
+        welcome_window.set_application(self)
+
+        file_picker_btn = builder.get_object("file_picker")
+
+        file_picker_btn.connect("clicked", self.on_welcome_file_picker_clicked, welcome_window)
+        welcome_window.present()
+
+    def on_welcome_file_picker_clicked(self, button, welcome_window):
+        dialog = Gtk.FileDialog()
+        dialog.set_title("Select Journal Folder")
+        dialog.select_folder(welcome_window, None, self.on_welcome_folder_selected, welcome_window)
+
+    def on_welcome_folder_selected(self, dialog, result, welcome_window):
+        folder = dialog.select_folder_finish(result)
+        if folder:
+            folder_path = folder.get_path()
+            self.settings.set_string("journal-location", folder_path)
+
+            welcome_window.close()
+            self.show_main_window()
 
     def on_about_action(self, *args):
         """Callback for the app.about action."""

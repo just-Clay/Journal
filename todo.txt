@@ -7,10 +7,16 @@ likely work.
 I only delete the day folders when they are empty. I just don't really think that
 this is that big of a problem, but this should be fixed at some point.
 
-3. Show attachment images in the attachment pane
+3. Images in the attachment pane and other views show up sideways if they were taken on a
+smartphone in portrait mode?
 
-4. Add the timeline page
+4. Add the timeline page (I am postponing this for right now)
 
-5. Add the on this day page
+5. Add the search page
 
-6. Add the search page
+6. Add Undo/Redo buttons in the editor view.
+
+7. When someone changes the directory they would like to save their journal to,
+the whole app needs to be refreshed so that any entries from the old directory
+are gone. This way, people can have multiple journals if they want, which is a
+kind of cool unintened feature.
