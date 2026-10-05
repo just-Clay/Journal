@@ -211,7 +211,7 @@ class JournalWindow(Adw.ApplicationWindow):
         else:
             self.attachment_view.set_show_sidebar(False)
 
-        image_suffixes = [".png", ".jpeg"]
+        image_suffixes = [".png", ".jpeg", ".jpg"]
         for file in attachments:
             suffix = file.suffix
 

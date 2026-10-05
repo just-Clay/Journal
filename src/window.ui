@@ -313,6 +313,7 @@
                                     <property name="orientation">vertical</property>
                                     <child>
                                       <object class="AdwClamp">
+                                        <property name="maximum-size">650</property>
                                         <child>
                                           <object class="AdwHeaderBar">
                                             <property name="css-classes">flat</property>
@@ -366,6 +367,7 @@
                                         <property name="vexpand">True</property>
                                         <child>
                                           <object class="AdwClamp">
+                                            <property name="maximum-size">650</property>
                                             <property name="vexpand">True</property>
                                             <child>
                                               <object class="GtkTextView" id="journal_entry">
