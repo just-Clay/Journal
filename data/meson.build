@@ -39,7 +39,9 @@ service_conf.set('bindir', join_paths(get_option('prefix'), get_option('bindir')
 configure_file(
   input: 'io.github.just_Clay.Journal.service.in',
   output: 'io.github.just_Clay.Journal.service',
-  configuration: service_conf,
+  configuration: {
+    'bindir': join_paths(get_option('prefix'), get_option('bindir'))
+  },
   install_dir: get_option('datadir') / 'dbus-1' / 'services'
 )
 
